@@ -98,12 +98,8 @@ def signup_for_activity(activity_name: str, email: str):
     # Get the specific activity
     activity = activities[activity_name]
 
-    # Validate student is not already signed up
-    if email in activity["participants"]:
-        raise HTTPException(status_code=400, detail="Student already signed up")
-
-    # Add student
-    activity["participants"].append(email)
+    # Add student (allow duplicates)
+    activity.setdefault("participants", []).append(email)
     return {"message": f"Signed up {email} for {activity_name}"}
 
 
@@ -121,4 +117,4 @@ def unregister_for_activity(activity_name: str, email: str):
         raise HTTPException(status_code=404, detail="Participant not found")
 
     activity["participants"].remove(email)
-    return {"message": f"Unregistered {email} from {activity_name}"}
+    return {"message": f"Unregistered {email} for {activity_name}"}

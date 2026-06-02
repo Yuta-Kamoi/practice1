@@ -11,7 +11,20 @@ _ORIG_ACTIVITIES = copy.deepcopy(_activities)
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    tc = TestClient(app)
+
+    # Some versions of TestClient/httpx expect 'follow_redirects' while tests
+    # may call 'allow_redirects'. Provide a thin wrapper to accept
+    # 'allow_redirects' and map it to 'follow_redirects' to avoid TypeError in tests.
+    original_get = tc.get
+
+    def get_with_allow_redirects(path, *args, **kwargs):
+        if 'allow_redirects' in kwargs:
+            kwargs['follow_redirects'] = kwargs.pop('allow_redirects')
+        return original_get(path, *args, **kwargs)
+
+    tc.get = get_with_allow_redirects
+    return tc
 
 
 @pytest.fixture(autouse=True)
